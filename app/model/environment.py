@@ -21,7 +21,8 @@ class GridEnv:
                  average_cancer_glucose_absorption = .54,
                  average_healthy_oxygen_consumption = 21.6,
                  average_cancer_oxygen_consumption = 21.6,
-                 cell_cycle = [11, 8, 4, 1]):
+                 cell_cycle = [11, 8, 4, 1],
+                 radiosensitivities = [1, .75, 1.25, 1.25, .75]):
         
         self.reward = reward
         self.time = 0
@@ -60,6 +61,7 @@ class GridEnv:
         self.critical_oxygen_level = average_healthy_oxygen_consumption*(3/4)*24 #360
         
         self.cell_cycle = cell_cycle
+        self.radiosensitivities = radiosensitivities
          
     def reset(self):
     
@@ -91,6 +93,7 @@ class GridEnv:
                                              quiescent_oxygen_level=self.quiescent_oxygen_level,
                                              quiescent_glucose_level=self.quiescent_glucose_level,
                                              cell_cycle=self.cell_cycle,
+                                             radiosensitivities=self.radiosensitivities,
                                         oar=None)
         # Init Healthy Cells
         for i in range(self.xsize):
@@ -118,7 +121,8 @@ class GridEnv:
                  critical_oxygen_level=self.critical_oxygen_level,
                  quiescent_oxygen_level=self.quiescent_oxygen_level,
                  quiescent_glucose_level=self.quiescent_glucose_level,
-                 cell_cycle=self.cell_cycle)
+                 cell_cycle=self.cell_cycle,
+                 radiosensitivities=self.radiosensitivities)
         
         self.grid.cells[self.xsize//2, self.ysize//2].append(new_cell)
 
@@ -232,6 +236,7 @@ class GridEnv:
                                              quiescent_oxygen_level=self.quiescent_oxygen_level,
                                              quiescent_glucose_level=self.quiescent_glucose_level,
                                              cell_cycle=self.cell_cycle,
+                                             radiosensitivities=self.radiosensitivities,
                                         oar=None)
         
         

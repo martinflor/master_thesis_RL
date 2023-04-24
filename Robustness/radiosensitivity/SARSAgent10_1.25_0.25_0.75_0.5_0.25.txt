@@ -1,0 +1,40 @@
+Old environment parameters 
+
+Radiosensitivities : [1, .75, 1.25, 1.25, .75] 
+Gap 1 : 1.0 
+Synthesis : 0.75 
+Gap 2 : 1.25 
+Mitosis : 1.25 
+Quiescence : 0.75 
+
+
+Performances of the agent on the old environment
+TCP :100.0
+Average num of fractions: 15.28 std dev: 2.757099925646511
+Average duration: 366.72 std dev: 66.17039821551629
+Average survival: 0.9636829863871778 std dev: 0.025074463963275617
+Average radiation dose: 41.78 std dev: 6.255525557457183
+
+
+
+
+Test of the robustness of the agent 
+New environment parameters 
+
+Radiosensitivities : [1.25, 0.25, 0.75, 0.5, 0.25] 
+Gap 1 : 1.25 
+Synthesis : 0.25 
+Gap 2 : 0.75 
+Mitosis : 0.5 
+Quiescence : 0.25 
+
+
+Performances of the agent on the new environment
+TCP :98.0
+Average num of fractions: 28.18 std dev: 6.999114229672209
+Average duration: 676.32 std dev: 167.978741512133
+Average survival: 0.9711937227708118 std dev: 0.03350262777344857
+Average radiation dose: 75.6 std dev: 14.261837188805657
+Start of Radiotherapy : 350
+Number Healthy Cells : 4205
+Number Cancer Cells : 5298

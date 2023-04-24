@@ -150,7 +150,8 @@ class CancerCell(Cell):
                  critical_oxygen_level,
                  quiescent_oxygen_level,
                  quiescent_glucose_level,
-                 cell_cycle):
+                 cell_cycle,
+                 radiosensitivities):
         
         """Constructor of CancerCell."""
         Cell.__init__(self, stage,
@@ -165,6 +166,7 @@ class CancerCell(Cell):
         
         CancerCell.cell_count += 1
         self.cell_cycle = cell_cycle
+        self.radiosensitivities = radiosensitivities
 
     def radiate(self, dose):
         """Irradiate this cell with a specific dose."""

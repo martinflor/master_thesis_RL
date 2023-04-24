@@ -96,6 +96,7 @@ class Grid:
                  quiescent_oxygen_level,
                  quiescent_glucose_level,
                  cell_cycle,
+                 radiosensitivities,
                  oar=None):
         """Constructor of the Grid.
 
@@ -119,6 +120,7 @@ class Grid:
         self.critical_oxygen_level = critical_oxygen_level
         
         self.cell_cycle = cell_cycle
+        self.radiosensitivities = radiosensitivities
         
         self.xsize = xsize
         self.ysize = ysize
@@ -133,6 +135,7 @@ class Grid:
         # the arrays.
         
         print(self.cell_cycle)
+        print(self.radiosensitivities)
 
         self.cells = np.empty((xsize, ysize), dtype=object)
         for i in range(xsize):
@@ -288,7 +291,8 @@ class Grid:
                                              critical_oxygen_level=self.critical_oxygen_level,
                                              quiescent_oxygen_level=self.quiescent_oxygen_level,
                                              quiescent_glucose_level=self.quiescent_glucose_level,
-                                             cell_cycle=self.cell_cycle)))
+                                             cell_cycle=self.cell_cycle,
+                                             radiosensitivities=self.radiosensitivities)))
                         elif res[2] == 2:  # Wake up surrounding oar cells
                             self.wake_surrounding_oar(i, j)
                         elif res[2] == 3:

@@ -12,6 +12,7 @@ import threading
 import time
 import pickle
 from model.environment import GridEnv
+from model.cell import HealthyCell, CancerCell, OARCell, Cell
 import os
 
 font = {'family' : 'normal',
@@ -49,21 +50,9 @@ class SimulationPage(customtkinter.CTkFrame):
             
         screen_width = self.master.winfo_screenwidth()
         screen_height = self.master.winfo_screenheight()
-        
-        # Get the height of the taskbar
         taskbar_height = screen_height - self.master.winfo_rooty()
         
-        print(screen_height - taskbar_height)
-        
-        # Set the window size and position
         self.master.geometry("%dx%d+0+0" % (screen_width, 760))
-        
-        self.structures = []
-        """
-        self.master.grid_columnconfigure(1, weight=1)
-        self.master.grid_columnconfigure((1, 2), weight=0)
-        self.master.grid_rowconfigure((0, 2, 2), weight=1)
-        """
         self.master.grid_rowconfigure(0, weight=1)
         self.master.grid_columnconfigure(1, weight=1)
 
@@ -112,6 +101,7 @@ class SimulationPage(customtkinter.CTkFrame):
                                                                        command=self.change_appearance_mode_event)
         self.appearance_mode_optionemenu.grid(row=9, column=0, padx=20, pady=(10, 10))   
         
+        self.structures = []
         self.simulate()
         
     def change_appearance_mode_event(self, new_appearance_mode: str):
@@ -123,18 +113,20 @@ class SimulationPage(customtkinter.CTkFrame):
                  average_cancer_glucose_absorption = self.params[1],
                  average_healthy_oxygen_consumption = self.params[2],
                  average_cancer_oxygen_consumption = self.params[3],
-                 cell_cycle = self.params[6])
+                 cell_cycle = self.params[6],
+                 radiosensitivities=self.params[7])
     
         self.environment.reset()
         self.environment.go(steps=1)
         self.idx = 0
         self.speed = 250
+        self.start_hour = None
         
         self.structures.append(self.environment)
     
     
         x_pos = 0.2
-        self.fig, axs = plt.subplots(2, 3, figsize = (16,12))
+        self.fig, axs = plt.subplots(2, 3, figsize = (16,16))
         canvas = FigureCanvasTkAgg(self.fig, master=self.master)
         canvas.draw()
         canvas.get_tk_widget().place(relx = x_pos, rely = 0.025, relwidth=0.75, relheight=0.775)
@@ -142,7 +134,6 @@ class SimulationPage(customtkinter.CTkFrame):
         self.cell_plot = axs[0][0]
         self.cell_density_plot = axs[0][1]
         self.glucose_plot = axs[0][2]
-        #self.cellular_model = axs[0][3]
     
         self.dose_plot   = axs[1][0]
         self.healthy_plot = axs[1][1]
@@ -161,9 +152,9 @@ class SimulationPage(customtkinter.CTkFrame):
         # GLUCOSE COLORBAR
         self.div2 = make_axes_locatable(self.glucose_plot)
         self.cax2 = self.div2.append_axes('right', '5%', '5%')
-        data = np.zeros((self.environment.xsize, self.environment.ysize))
-        im = self.glucose_plot.imshow(data)
-        self.cb2 = self.fig.colorbar(im, cax=self.cax2)
+        data2 = np.zeros((self.environment.xsize, self.environment.ysize))
+        im2 = self.glucose_plot.imshow(data2)
+        self.cb2 = self.fig.colorbar(im2, cax=self.cax2)
     
         self.nb = self.environment.nb
         self.time_arr    = self.environment.time_arr
@@ -260,11 +251,44 @@ class SimulationPage(customtkinter.CTkFrame):
                 if not self.environment.inTerminalState():
                     self.environment.go(steps=1)
                     self.slider.set(self.idx)
-                    if (self.idx > 349) and ((self.idx-326)%24 == 0):
+                    if (self.start_hour is None):
+                        if (CancerCell.cell_count > 9000):
+                            self.start_hour = self.environment.time
+                        else:
+                            self.update_plot(self.idx)
+                            self.master.after(self.speed, self.update)
+                    elif ((self.idx-(self.start_hour-24))%24 == 0):
                         state = self.environment.convert(self.environment.observe())
                         action = self.choose_action(state)
                         reward = self.environment.act(action)
                     self.update_plot(self.idx)
+                else:
+                    self.idx -= 1
+                    self.save_plot()
+
+            self.master.after(self.speed, self.update)
+            
+    def update(self):
+        if not self.stop_event.is_set():
+            if not self.is_paused:
+                if not self.environment.inTerminalState():
+                    self.environment.go(steps=1)
+                    self.slider.set(self.idx)
+                    if (self.start_hour is not None):
+                        if ((self.idx-(self.start_hour-24))%24 == 0):
+                            state = self.environment.convert(self.environment.observe())
+                            action = self.choose_action(state)
+                            reward = self.environment.act(action)
+                    elif (self.start_hour is None) and (CancerCell.cell_count > 9000):
+                        self.start_hour = self.environment.time
+                    
+                    self.update_plot(self.idx)
+                    
+                else:
+                    self.idx -= 1
+                    self.save_plot()
+                    self.stop_simulation()
+                    return
 
             self.master.after(self.speed, self.update)
         
@@ -319,45 +343,54 @@ class SimulationPage(customtkinter.CTkFrame):
     
         # plot cells
         self.cell_plot.clear()
-        self.cell_plot.set_title("Cells")
         self.cell_plot.imshow(self.grid_arr[i], cmap='coolwarm')
         self.cell_plot.set_xticks([])
         self.cell_plot.set_yticks([])
+        self.cell_plot.set_title("Cells", fontsize=20, pad=10)
         
         # plot cell density
-        self.cax.cla()
         self.cell_density_plot.clear()
-        self.cell_density_plot.set_title("Cell Density")
         im = self.cell_density_plot.imshow(self.density_arr[i], cmap='coolwarm')
         self.fig.colorbar(im, cax=self.cax)
         self.cell_density_plot.set_xticks([])
         self.cell_density_plot.set_yticks([])
+        self.cell_density_plot.set_title("Cell Density", fontsize=20, pad=10)
         
         # plot glucose
         self.cax2.cla()
         self.glucose_plot.clear()
-        self.glucose_plot.set_title("Glucose Concentration")
         im2 = self.glucose_plot.imshow(self.glucose_arr[i], cmap='YlOrRd')
         self.fig.colorbar(im2, cax=self.cax2)
         self.glucose_plot.set_xticks([])
         self.glucose_plot.set_yticks([])
+        self.glucose_plot.set_title("Glucose Concentration", fontsize=20, pad=10)
         
         # plot dose
         self.dose_plot.clear()
         self.dose_plot = axes_off(self.dose_plot)
-        self.dose_plot.set_title("Radiation Dose")
+        #self.dose_plot.set_title("Radiation Dose")
+        plt.text(0.5, 1.08, "Radiation Dose",
+             horizontalalignment='center',
+             fontsize=20,
+             transform = self.dose_plot.transAxes)
         self.dose_plot.plot(self.time_arr[:i+1], self.dose_arr[:i+1])
         
         # plot healthy cells
         self.healthy_plot.clear()
         self.healthy_plot = axes_off(self.healthy_plot)
-        self.healthy_plot.set_title("Healthy Cells")
+        plt.text(0.5, 1.08, "Healthy Cells",
+             horizontalalignment='center',
+             fontsize=20,
+             transform = self.healthy_plot.transAxes)
         self.healthy_plot.plot(self.time_arr[:i+1], self.healthy_arr[:i+1], label="Healthy", color="b")
         
         # plot cancer cells
         self.cancer_plot.clear()
         self.cancer_plot = axes_off(self.cancer_plot)
-        self.cancer_plot.set_title("Cancer Cells")
+        plt.text(0.5, 1.08, "Cancer Cells",
+             horizontalalignment='center',
+             fontsize=20,
+             transform = self.cancer_plot.transAxes)
         self.cancer_plot.plot(self.time_arr[:i+1], self.cancer_arr[:i+1], label="Cancer", color="r")
         
         if not self.focus:

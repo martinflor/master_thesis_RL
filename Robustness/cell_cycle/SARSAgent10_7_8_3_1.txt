@@ -1,0 +1,38 @@
+Old environment parameters 
+
+Cell Cycle : [11, 8, 4, 1] 
+Gap 1 : 11 hours 
+Synthesis : 8 hours 
+Gap 2 : 4 hours 
+Mitosis : 1 hour 
+
+
+Performances of the agent on the old environment
+TCP :100.0
+Average num of fractions: 15.28 std dev: 2.757099925646511
+Average duration: 366.72 std dev: 66.17039821551629
+Average survival: 0.9636829863871778 std dev: 0.025074463963275617
+Average radiation dose: 41.78 std dev: 6.255525557457183
+
+
+
+
+Test of the robustness of the agent 
+New environment parameters 
+
+Cell Cycle : [7, 8, 3, 1] 
+Gap 1 : 7 hours 
+Synthesis : 8 hours 
+Gap 2 : 3 hours 
+Mitosis : 1 hour 
+
+
+Performances of the agent on the new environment
+TCP :100.0
+Average num of fractions: 22.62 std dev: 6.177021936176041
+Average duration: 542.88 std dev: 148.24852646822498
+Average survival: 0.9768996814603476 std dev: 0.033144245800350726
+Average radiation dose: 59.8 std dev: 12.745195173083854
+Start of Radiotherapy : 327
+Number Healthy Cells : 4075
+Number Cancer Cells : 10696

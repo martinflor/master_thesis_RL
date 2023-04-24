@@ -45,7 +45,7 @@ class App(customtkinter.CTk):
         # create sidebar frame with widgets
         self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(5, weight=1)
+        self.sidebar_frame.grid_rowconfigure(6, weight=1)
         self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="Reinforcement Learning \n and \n Radiotherapy", font=customtkinter.CTkFont(size=16, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
         self.sidebar_button_1 = customtkinter.CTkButton(self.sidebar_frame, text="Start", command=self.simulation, width=190)
@@ -56,7 +56,8 @@ class App(customtkinter.CTk):
         
         # create textbox
         self.textbox = customtkinter.CTkTextbox(self.sidebar_frame)
-        self.textbox.grid(row=3, column=0, rowspan=3, padx=20, pady=10, sticky="nsew")
+        #self.textbox.grid(row=3, column=0, rowspan=4, padx=20, pady=10, sticky="nsew")
+        self.textbox.place(relx=0.05, rely=0.25, relwidth=0.9, relheigh=0.45)
         
         with open(dir_path + '\\misc\\treatment_help.txt', 'r') as file:
             treatment_file = file.readlines()
@@ -74,8 +75,9 @@ class App(customtkinter.CTk):
         
         self.texts = {"Nutrients" : "Help Box\n\n\n " + nutrients_file,
                       "Treatment" : "Help Box\n\n\n " + treatment_file,
-                      "Cell cycle" : "Help Box\n\n\n " + cell_cycle_file}
-        self.textbox.insert("0.0", self.texts["Treatment"])
+                      "Cell cycle" : "Help Box\n\n\n " + cell_cycle_file,
+                      "Radiosensitivity" : "Help Box\n\n\n"}
+        self.textbox.insert('0.0', self.texts["Treatment"])
         self.textbox.configure(state="disabled", wrap="word")
 
 
@@ -93,10 +95,21 @@ class App(customtkinter.CTk):
         github = customtkinter.CTkImage(light_image=Image.open("images/github.png"),
                                   dark_image=Image.open("images/github.png"),
                                   size=(30, 30))
-        button_github = customtkinter.CTkButton(self.sidebar_frame, text= 'martinflor', 
+        button_github = customtkinter.CTkButton(self.sidebar_frame, text= 'GITHUB', 
                                                 image=github, fg_color='transparent', text_color=('black', 'white'),
-                                                command=self.open_website)
-        button_github.grid(row=6, column=0, padx=20, pady=(10, 0))
+                                                command=self.open_github)
+        #button_github.grid(row=6, column=0, padx=20, pady=(10, 0))
+        button_github.place(relx=0.025, rely=0.75, relwidth=0.9, relheight=0.05)
+        
+        # LINKEDIN ICON
+        
+        linkedin = customtkinter.CTkImage(light_image=Image.open("images/linkedin.png"),
+                                  dark_image=Image.open("images/linkedin.png"),
+                                  size=(30, 30))
+        button_linkedin = customtkinter.CTkButton(self.sidebar_frame, text= 'LinkedIn', 
+                                                image=linkedin, fg_color='transparent', text_color=('black', 'white'),
+                                                command=self.open_linkedin)
+        button_linkedin.place(relx=0.025, rely=0.825, relwidth=0.9, relheight=0.05)
         
         # AUTHORS
         
@@ -106,11 +119,13 @@ class App(customtkinter.CTk):
         self.supervisor_label = customtkinter.CTkLabel(self, text='Supervisors: Mélanie Ghislain, Manon Dausort, Damien Dasnoy-Sumell, Benoît Macq')
         self.supervisor_label.place(relx=0.16, rely=1.0, anchor='sw')
         
+        # APPEARANCE MODE
+        
         self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
-        self.appearance_mode_label.grid(row=7, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_label.grid(row=8, column=0, padx=20, pady=(10, 0))
         self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["Light", "Dark", "System"], width=190,
                                                                        command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=8, column=0, padx=20, pady=(10, 10))
+        self.appearance_mode_optionemenu.grid(row=9, column=0, padx=20, pady=(10, 10))
 
         # create tabview
         self.tabview = customtkinter.CTkTabview(self, width=550, command=self.update_helpbox)
@@ -128,6 +143,7 @@ class App(customtkinter.CTk):
         self.tabview.add("Treatment")
         self.tabview.add("Nutrients")
         self.tabview.add("Cell cycle")
+        self.tabview.add("Radiosensitivity")
         self.tabview.tab("Treatment").grid_columnconfigure(0, weight=1)  
         self.tabview.tab("Nutrients").grid_columnconfigure(0, weight=1)
         self.tabview.tab("Cell cycle").grid_columnconfigure(0, weight=1)
@@ -165,26 +181,50 @@ class App(customtkinter.CTk):
 
         # TREATMENT
         
+        self.tabview_tt = customtkinter.CTkTabview(self.tabview.tab("Treatment"), width=550)
+        self.tabview_tt.place(relx=0.45, rely=0.01, relwidth=0.55, relheight=.99)
+        
+        self.tabview_tt.add("Performances")
+        self.tabview_tt.add("Agent's q-table")
+
+        self.tabview_tt.tab("Performances").grid_columnconfigure(0, weight=1)  
+        self.tabview_tt.tab("Agent's q-table").grid_columnconfigure(0, weight=1)
+        
         values = self.list_agent()
         lst = [i for i, _ in values]
         
-        self.combobox_label = customtkinter.CTkLabel(self.tabview.tab("Treatment"), text="RL Agent:", anchor="w")
+        self.combobox_label = customtkinter.CTkLabel(self.tabview.tab("Treatment"), text="RL Agent:", anchor="w", font=customtkinter.CTkFont(size=16, weight="bold"))
         self.combobox_label.place(relx=0.015, rely=0.05, relwidth=0.25, relheight=0.05)
         self.combobox_1 = customtkinter.CTkComboBox(self.tabview.tab("Treatment"),
                                                     values=lst, command=self.update_description)
         self.combobox_1.place(relx=0.025, rely=0.1, relwidth=0.25, relheight=0.05)
         
+        self.states_label = customtkinter.CTkLabel(self.tabview.tab("Treatment"), text="Number of unexplored states by the agent : /", anchor="w", font=customtkinter.CTkFont(size=16, weight="bold"))
+        self.states_label.place(relx=0.015, rely=0.85, relwidth=0.4, relheight=0.05)
+        
+        
+        # Treatment : Performances
+        
         self.fig_box, self.axes = plt.subplots(3,1, figsize=(24,20))
         self.fig_box.patch.set_alpha(0)
-        canvas_box = FigureCanvasTkAgg(self.fig_box, master=self.tabview.tab("Treatment"))
+        canvas_box = FigureCanvasTkAgg(self.fig_box, master=self.tabview_tt.tab("Performances"))
         canvas_box.draw()
         canvas_box.get_tk_widget().config(highlightthickness=0, borderwidth=0)
-        canvas_box.get_tk_widget().place(relx=0.45, rely=0.01, relwidth=0.55, relheight=.99)
+        canvas_box.get_tk_widget().place(relx=0.01, rely=0.01, relwidth=0.99, relheight=0.99)
+        
+        # Treatment : Q-table
+        
+        self.fig_table, self.axes_table = plt.subplots(4, 1, constrained_layout=True, figsize = (16,12))
+        self.fig_table.patch.set_alpha(0)
+        canvas_table = FigureCanvasTkAgg(self.fig_table, master=self.tabview_tt.tab("Agent's q-table"))
+        canvas_table.draw()
+        canvas_table.get_tk_widget().config(highlightthickness=0, borderwidth=0)
+        canvas_table.get_tk_widget().place(relx=0.01, rely=0.01, relwidth=0.99, relheight=0.99)
 
         self.update_description(1)
         
         # Cell Cycle
-        self.data = [11, 8, 4, 1]
+        self.data = [11, 8, 4, 1, 24]
         self.fig2, self.ax = plt.subplots(2,1, figsize=(6, 9), frameon=False)
         self.fig2.patch.set_alpha(0)
         
@@ -194,9 +234,9 @@ class App(customtkinter.CTk):
         canvas2.get_tk_widget().place(relx=0.45, rely=0.01, relwidth=0.55, relheight=0.99)
         
         
-        self.fields_cc = ('Gap 1 (G1)', 'Synthesis (S)', 'Gap 2 (G2)', 'Mitosis (M)')
+        self.fields_cc = ('Gap 1 (G1)', 'Synthesis (S)', 'Gap 2 (G2)', 'Mitosis (M)', 'Cell Cycle Duration')
         self.labels_cc = [customtkinter.CTkLabel(self.tabview.tab("Cell cycle"), width=60, text=field+": ", anchor='nw', font=customtkinter.CTkFont(size=16, weight="bold")) for field in self.fields_cc]
-        self.entries_cc = [customtkinter.CTkEntry(self.tabview.tab("Cell cycle")) for _ in range(4)]
+        self.entries_cc = [customtkinter.CTkEntry(self.tabview.tab("Cell cycle")) for _ in range(len(self.fields_cc))]
         
         init_x, init_y = 0.05, 0.1
         change_x, change_y = 0.25, 0.075
@@ -207,52 +247,71 @@ class App(customtkinter.CTk):
             self.labels_cc[idx].place(relx=init_x, rely=init_y+change_y*idx)
             self.entries_cc[idx].place(relx=init_x+change_x, rely=init_y+change_y*idx)
         
+        self.entry_text = tk.StringVar()
+        self.entries_cc[idx].configure(textvariable=self.entry_text)
         self.plot_pie(self.data)
         
         
         # Radiosensitivity
         
-        self.radio = [11, 8, 4, 1]
-        self.fig2, self.ax = plt.subplots(2,1, figsize=(6, 9), frameon=False)
-        self.fig2.patch.set_alpha(0)
+        self.radio = [1, .75, 1.25, 1.25, .75, 0,96875]
+        self.fig_radio, self.ax_radio = plt.subplots(1, 1, figsize=(12,9))
+        self.fig_radio.patch.set_alpha(0)
         
-        canvas2 = FigureCanvasTkAgg(self.fig2, master=self.tabview.tab("Cell cycle"))
-        canvas2.draw()
-        canvas2.get_tk_widget().config(highlightthickness=0, borderwidth=0)
-        canvas2.get_tk_widget().place(relx=0.45, rely=0.01, relwidth=0.55, relheight=0.99)
+        canvas_radio = FigureCanvasTkAgg(self.fig_radio, master=self.tabview.tab("Radiosensitivity"))
+        canvas_radio.draw()
+        canvas_radio.get_tk_widget().config(highlightthickness=0, borderwidth=0)
+        canvas_radio.get_tk_widget().place(relx=0.45, rely=0.01, relwidth=0.55, relheight=0.99)
         
-        
-        self.fields_cc = ('Gap 1 (G1)', 'Synthesis (S)', 'Gap 2 (G2)', 'Mitosis (M)')
-        self.labels_cc = [customtkinter.CTkLabel(self.tabview.tab("Cell cycle"), width=60, text=field+": ", anchor='nw', font=customtkinter.CTkFont(size=16, weight="bold")) for field in self.fields_cc]
-        self.entries_cc = [customtkinter.CTkEntry(self.tabview.tab("Cell cycle")) for _ in range(4)]
+        self.fields_radio = ('Gap 1 (G1)', 'Synthesis (S)', 'Gap 2 (G2)', 'Mitosis (M)', 'Quiescent (G0)', 'Sum of radiosensitivities')
+        self.labels_radio = [customtkinter.CTkLabel(self.tabview.tab("Radiosensitivity"), width=60, text=field+": ", anchor='nw', font=customtkinter.CTkFont(size=16, weight="bold")) for field in self.fields_radio]
+        self.entries_radio = [customtkinter.CTkEntry(self.tabview.tab("Radiosensitivity")) for _ in range(len(self.fields_radio))]
         
         init_x, init_y = 0.05, 0.1
         change_x, change_y = 0.25, 0.075
         
-        for idx, ent in enumerate(self.entries_cc):
-            self.entries_cc[idx].insert(1, str(self.data[idx]))
-            self.entries_cc[idx].bind('<KeyRelease>', self.update_plot2)
-            self.labels_cc[idx].place(relx=init_x, rely=init_y+change_y*idx)
-            self.entries_cc[idx].place(relx=init_x+change_x, rely=init_y+change_y*idx)
+        for idx, ent in enumerate(self.entries_radio):
+            self.entries_radio[idx].insert(1, str(self.radio[idx]))
+            self.entries_radio[idx].bind('<KeyRelease>', self.update_plot_radio)
+            self.labels_radio[idx].place(relx=init_x, rely=init_y+change_y*idx)
+            self.entries_radio[idx].place(relx=init_x+change_x, rely=init_y+change_y*idx)
         
-        self.plot_pie(self.data)
+        self.entry_text2 = tk.StringVar()
+        self.entries_radio[idx].configure(textvariable=self.entry_text2)
+        self.plot_radio(self.radio)
         
+    def get_values_radio(self):
+        values = []
+        for idx, field in enumerate(self.fields_radio):
+            values.append(float(self.entries_radio[idx].get()))
+        return values
         
-    def plot_radio(self):
-        with plt.style.context(matplotx.styles.dufte):
-            fig, ax = plt.subplots(1, 1, figsize=(12,9))
-            
-            for idx, rad in enumerate(radiosensitivities):
-                print(rad)
-                survival = f(dose, idx)
-                ax.plot(dose, survival, label=f"radiosensitivity of {rad} ({names[idx]})")
-                ax.set_xlabel("Radiation dose (Gy)")
-                ax.set_ylabel("Surviving fraction")
-            
-            plt.legend()
+    def update_plot_radio(self, event):
+        self.after(500, self.plot_radio, self.get_values_radio())
+        
+    def plot_radio(self, radiosensitivities):
+        self.ax_radio.clear()
+        alpha_norm_tissue = 0.15
+        beta_norm_tissue = 0.03
+        dose = np.linspace(0,10, 1000)
+        f = lambda x, stage : np.exp(radiosensitivities[stage] * (-alpha_norm_tissue*x - beta_norm_tissue * (x ** 2)))
+        
+        for idx, rad in enumerate(radiosensitivities[:-1]):
+            survival = f(dose, idx)
+            self.ax_radio.plot(dose, survival, label=f"radiosensitivity of {rad} ({self.fields_radio[idx]})")
+            self.ax_radio.set_xlabel("Radiation dose (Gy)")
+            self.ax_radio.set_ylabel("Surviving fraction")
+        
+        self.ax_radio.legend()
+        
+        sum_radio = (11*radiosensitivities[0]+8*radiosensitivities[1]+4*radiosensitivities[2]+radiosensitivities[3])/24
+        
+        self.entries_radio[-1].configure(state='normal')
+        self.entry_text2.set(str(sum_radio))
+        self.entries_radio[-1].configure(state='disabled')
+        
+        self.fig_radio.canvas.draw()
 
-        
-        
     def update_helpbox(self):
         self.textbox.configure(state="normal", wrap="word")
         tab = self.tabview.get()
@@ -278,20 +337,27 @@ class App(customtkinter.CTk):
                 return '{p:.2f}%  ({v:d})'.format(p=pct,v=val)
             return my_autopct
         
-        default = [11, 8, 4, 1]
+        default = [11, 8, 4, 1, 24]
         labels = ['Gap 1', 'Synthesis', 'Gap 2', 'Mitosis']
         colors = sns.color_palette('pastel')[0:4]
         self.ax[0].clear()
         self.ax[1].clear()
-        self.ax[0].pie(default, labels = labels, colors = colors, autopct=make_autopct(default))
-        self.ax[1].pie(data, labels = labels, colors = colors, autopct=make_autopct(data))
+        self.ax[0].pie(default[:-1], labels = labels, colors = colors, autopct=make_autopct(default[:-1]))
+        self.ax[1].pie(data[:-1], labels = labels, colors = colors, autopct=make_autopct(data[:-1]))
         plt.tight_layout()
+        
+        self.entries_cc[-1].configure(state='normal')
+        self.entry_text.set(str(sum(data[:-1])))
+        self.entries_cc[-1].configure(state='disabled')
         
         self.fig2.canvas.draw()
 
     
-    def open_website(self):
-        webbrowser.open_new_tab('https://github.com/martinflor')
+    def open_github(self):
+        webbrowser.open_new_tab('https://github.com/martinflor/master_thesis_RL')
+
+    def open_linkedin(self):
+        webbrowser.open_new_tab('https://www.linkedin.com/in/florian-martin-554350239/')
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
@@ -362,21 +428,21 @@ class App(customtkinter.CTk):
     def description(self, menu, file_name):
             
         self.agent_frame = customtkinter.CTkFrame(menu, fg_color='transparent')
-        self.agent_frame.place(relx=0.01, rely=0.3, relwidth=0.4, relheight=1)
+        self.agent_frame.place(relx=0.01, rely=0.25, relwidth=0.4, relheight=0.5)
         
-        tcp_baseline = 98.0
-        fractions_baseline = (34.9, 3.5623026261113755)
-        doses_baseline = (69.8, 7.124605252222751)
-        duration_baseline = (837.6, 85.495263026673)
-        survival_baseline = (0.9873456049228684, 0.011230605729865561)
+        tmp_dict = self.get_agent(dir_path + '\\TabularAgentResults\\results_baseline.pickle')
+        tcp_baseline = tmp_dict["TCP"]
+        fractions_baseline = (np.mean(tmp_dict["fractions"]), np.std(tmp_dict["fractions"]))
+        doses_baseline = (np.mean(tmp_dict["doses"]), np.std(tmp_dict["doses"]))
+        duration_baseline = (np.mean(tmp_dict["duration"]), np.std(tmp_dict["duration"]))
+        survival_baseline = (np.mean(tmp_dict["survival"]), np.std(tmp_dict["survival"]))
         
         if file_name == 'Baseline':
-            tmp_dict = self.get_agent(dir_path + '\\TabularAgentResults\\8.pickle')
-            tcp = tmp_dict["TCP"]
-            fractions = (np.mean(tmp_dict["fractions"]), np.std(tmp_dict["fractions"]))
-            doses = (np.mean(tmp_dict["doses"]), np.std(tmp_dict["doses"]))
-            duration = (np.mean(tmp_dict["duration"]), np.std(tmp_dict["duration"]))
-            survival = (np.mean(tmp_dict["survival"]), np.std(tmp_dict["survival"]))
+            tcp = tcp_baseline
+            fractions = fractions_baseline
+            doses = doses_baseline
+            duration = duration_baseline
+            survival = survival_baseline
         else:
             file_list = self.list_agent()
             for name, path_ in file_list:
@@ -417,6 +483,8 @@ class App(customtkinter.CTk):
                 label.grid(row=i+1, column=j*4, padx=padx_value, pady=5)
                 
         self.boxplot_agent(tmp_dict["fractions"], tmp_dict["duration"], tmp_dict["survival"], file_name)
+        if file_name != 'Baseline':
+            self.q_table_agent(path)
 
                 
     def get_agent(self, path):
@@ -436,6 +504,43 @@ class App(customtkinter.CTk):
                 
         return lst
     
+    def q_table_agent(self, path):
+        
+        def get_q_color(value, vals):
+            if all(x==max(vals) for x in vals):
+                return "grey", 0.5
+            if value == max(vals):
+                return "green", 1.0
+            else:
+                return "red", 0.3
+
+        filename = path + f'\\q_table_{int_from_str(path)}'
+        q_table = np.load(filename + '.npy', allow_pickle=False)
+        
+        self.axes_table[0].clear()
+        self.axes_table[1].clear()
+        self.axes_table[2].clear()
+        self.axes_table[3].clear()
+        
+        self.axes_table[0].set_title("Action 1 : 1 Gray")
+        self.axes_table[1].set_title("Action 2 : 2 Grays")
+        self.axes_table[2].set_title("Action 3 : 3 Grays")
+        self.axes_table[3].set_title("Action 4 : 4 Grays")
+        
+        count = 0
+        for x, x_vals in enumerate(q_table):
+                for y, y_vals in enumerate(x_vals):
+                    self.axes_table[0].scatter(x, y, c=get_q_color(y_vals[0], y_vals)[0], marker="o", alpha=get_q_color(y_vals[0], y_vals)[1])
+                    self.axes_table[1].scatter(x, y, c=get_q_color(y_vals[1], y_vals)[0], marker="o", alpha=get_q_color(y_vals[1], y_vals)[1])
+                    self.axes_table[2].scatter(x, y, c=get_q_color(y_vals[2], y_vals)[0], marker="o", alpha=get_q_color(y_vals[2], y_vals)[1])
+                    self.axes_table[3].scatter(x, y, c=get_q_color(y_vals[3], y_vals)[0], marker="o", alpha=get_q_color(y_vals[3], y_vals)[1])
+                
+                    if all(x==y_vals[0] for x in y_vals):
+                        count += 1
+                        
+        self.states_label.configure(text=f"Number of unexplored states : {count}")
+        self.fig_table.canvas.draw()
+    
     def boxplot_agent(self, fractions, duration, survival, name):
         
         self.axes[0].clear()
@@ -446,13 +551,13 @@ class App(customtkinter.CTk):
 
         # Create a DataFrame for each list
         data_fractions = pd.DataFrame({"Values": fractions})
-        data_fractions["Type"] = "Fractions"
+        data_fractions["Type"] = "Fractions [-]"
         
         data_duration = pd.DataFrame({"Values": duration})
-        data_duration["Type"] = "Duration"
+        data_duration["Type"] = "Duration \n [hours]"
         
         data_survival = pd.DataFrame({"Values": survival})
-        data_survival["Type"] = "Survival"
+        data_survival["Type"] = "Survival [-]"
         
         # Combine the three DataFrames
         data = pd.concat([data_fractions, data_duration, data_survival], ignore_index=True)
@@ -461,17 +566,11 @@ class App(customtkinter.CTk):
         fig, axes = plt.subplots(1, 3, figsize=(15, 6), sharey=True)
         
         # Loop through each subplot and create the boxplot with scatter points
-        for i, data_type in enumerate(["Fractions", "Duration", "Survival"]):
+        for i, data_type in enumerate(["Fractions [-]", "Duration \n [hours]", "Survival [-]"]):
             sns.boxplot(x="Values", y="Type", orient='h', data=data[data["Type"] == data_type], ax=self.axes[i], palette="Set2", width=0.5)
             sns.stripplot(x="Values", y="Type", orient='h', data=data[data["Type"] == data_type], ax=self.axes[i], color=".25")
             self.axes[i].set_ylabel("")
-        
-        # Set ylabel for the first subplot only
-        self.axes[0].set_ylabel('Fractions [-]', fontsize=18)
-        self.axes[1].set_ylabel('Duration [hours]', fontsize=18)
-        self.axes[2].set_ylabel('Survival [-]', fontsize=18)
 
-        
         self.fig_box.canvas.draw()
     
     def quit_page(self):
@@ -535,7 +634,7 @@ class App(customtkinter.CTk):
             if file_name == name:
                 path = path_
                 
-        params = self.get_values() + [file_name, path, self.get_values2()]
+        params = self.get_values() + [file_name, path, self.get_values2(), self.get_values_radio()]
         self.simulation = SimulationPage(self, params)
 
 
