@@ -130,7 +130,7 @@ class HealthyCell(Cell):
 
     def cell_color(self):
         """RGB for the cell's color"""
-        return 0, 204, 102
+        return 0, 250, 102
 
     def cell_type(self):
         """Return 1, the type of the cell to sort cell lists and compare them"""
@@ -166,7 +166,7 @@ class CancerCell(Cell):
         
         CancerCell.cell_count += 1
         self.cell_cycle = cell_cycle
-        self.radiosensitivities = radiosensitivities
+        self.radiosensitivities=radiosensitivities
 
     def radiate(self, dose):
         """Irradiate this cell with a specific dose."""
@@ -215,7 +215,7 @@ class CancerCell(Cell):
 
     def cell_color(self):
         """RGB for the cell's color"""
-        return 104, 24, 24
+        return 250, 24, 24
 
     def cell_type(self):
         """Return -1, the type of the cell to sort cell lists and compare them"""

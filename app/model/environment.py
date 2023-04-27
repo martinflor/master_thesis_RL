@@ -16,13 +16,14 @@ import pandas as pd
 
 class GridEnv:
     
-    def __init__(self, reward, h_threshold=4700, c_threshold=8900, sources = 100,
+    def __init__(self, reward, sources = 100,
                  average_healthy_glucose_absorption = .36,
                  average_cancer_glucose_absorption = .54,
-                 average_healthy_oxygen_consumption = 21.6,
-                 average_cancer_oxygen_consumption = 21.6,
+                 average_healthy_oxygen_consumption = 20,
+                 average_cancer_oxygen_consumption = 20,
                  cell_cycle = [11, 8, 4, 1],
-                 radiosensitivities = [1, .75, 1.25, 1.25, .75]):
+                 radiosensitivities=[1, .75, 1.25, 1.25, .75]
+                 ):
         
         self.reward = reward
         self.time = 0
@@ -33,19 +34,9 @@ class GridEnv:
         self.grid = None
         self.sources = sources
         
-        self.oxygen_factor = 1 #average_cancer_oxygen_consumption/21.6
-        self.glucose_factor = 1 #average_cancer_glucose_absorption/0.54
-        
-        
         self.nb_stages_cancer = 50
         self.nb_stages_healthy = 5
         self.nb_actions        = 4
-        
-        self.h_threshold = h_threshold
-        self.c_threshold = c_threshold
-        
-        self.state_helper_hcells = self.h_threshold / (self.nb_stages_healthy - 2.0)
-        self.state_helper_ccells = self.c_threshold / (self.nb_stages_cancer - 2.0)
          
         
         self.average_healthy_glucose_absorption = average_healthy_glucose_absorption
@@ -54,24 +45,31 @@ class GridEnv:
         self.average_healthy_oxygen_consumption = average_healthy_oxygen_consumption
         self.average_cancer_oxygen_consumption  = average_cancer_oxygen_consumption
         
-        self.quiescent_glucose_level = average_healthy_glucose_absorption*2*24 #17.28 
-        self.quiescent_oxygen_level = average_healthy_oxygen_consumption*2*24 #960
+        self.quiescent_glucose_level = average_healthy_glucose_absorption*2*24
+        self.quiescent_oxygen_level = average_healthy_oxygen_consumption*2*24
         
-        self.critical_glucose_level = average_healthy_glucose_absorption*(3/4)*24 #6.48
-        self.critical_oxygen_level = average_healthy_oxygen_consumption*(3/4)*24 #360
+        self.critical_glucose_level = average_healthy_glucose_absorption*(3/4)*24
+        self.critical_oxygen_level = average_healthy_oxygen_consumption*(3/4)*24
         
         self.cell_cycle = cell_cycle
         self.radiosensitivities = radiosensitivities
+        
+        print(self.cell_cycle)
+        print(self.radiosensitivities)
+        
          
     def reset(self):
     
         # Results
+        self.start_time = 350
         self.nb = 2000
         self.time_arr    = np.arange(0, self.nb, 1)
         self.healthy_arr = np.array([np.nan]*self.nb)
         self.cancer_arr  = np.array([np.nan]*self.nb)
         self.dose_arr    = np.array([np.nan]*self.nb)
         
+        HealthyCell.cell_count = 0
+        CancerCell.cell_count = 0
         self.total_dose = 0.
         
         self.glucose_arr = list()
@@ -129,7 +127,6 @@ class GridEnv:
         self.grid.count_neighbors()
         
         # First : tumor growth and cells spreading
-        self.init_hcell_count = HealthyCell.cell_count
         
     def go(self, steps=1):
         for _ in range(steps):
@@ -144,13 +141,15 @@ class GridEnv:
             
             
             
-            self.grid.fill_source(130 * self.glucose_factor, 4500 * self.oxygen_factor)
+            self.grid.fill_source(130, 4500)
             self.grid.cycle_cells()
             self.grid.diffuse_glucose(0.2)
             self.grid.diffuse_oxygen(0.2)
             self.time += 1
             if self.time % 24 == 0:
                 self.grid.compute_center()
+        
+        
                 
     def adjust_reward(self, dose, ccell_killed, hcells_lost):
         
@@ -161,7 +160,7 @@ class GridEnv:
                 if self.reward == 'dose':
                     return - dose / 400 + 0.5 - (self.init_hcell_count - HealthyCell.cell_count) / 3000
                 else:
-                    return 0.5 - (self.init_hcell_count - HealthyCell.cell_count) / 3000#(cppCellModel.HCellCount() / self.init_hcell_count) - 0.5 - (2 * hcells_lost/2500)
+                    return 0.5 - (self.init_hcell_count - HealthyCell.cell_count) / 3000
         else:
             if self.reward == 'dose' or self.reward == 'oar':
                 return - dose / 400 + (ccell_killed - 5 * hcells_lost)/100000
@@ -171,13 +170,14 @@ class GridEnv:
     def act(self, action):
         
         dose = action + 1
-        print("dose of :", dose)
+        print(f'Dose of {dose} applied at time {self.time}')
         self.total_dose += dose
         pre_hcell = HealthyCell.cell_count
         pre_ccell = CancerCell.cell_count # Previous State
         self.grid.irradiate(dose)
         m_hcell = HealthyCell.cell_count
         m_ccell = CancerCell.cell_count
+        #self.go(24)
         post_hcell = HealthyCell.cell_count # Next State
         post_ccell = CancerCell.cell_count
         
@@ -213,11 +213,11 @@ class GridEnv:
                 return self.nb_stages_cancer - 1
         else: 
             div = (7000-500)/22
-            return int(ceil(count/div))+24
+            return min(self.nb_stages_cancer - 1, int(ceil(count/div))+24)
 
     def hcell_state(self, count):
-        #return min(self.nb_stages_healthy - 1, int(ceil(max(HealthyCell.cell_count - 9, 0) / self.state_helper_hcells)))
         return min(self.nb_stages_healthy - 1, max(0, int(ceil((count-(2875+375))/375))))
+
 
     def convert(self, obs):
         discrete_state = (self.ccell_state(obs[1]), self.hcell_state(obs[0]))
@@ -236,10 +236,9 @@ class GridEnv:
                                              quiescent_oxygen_level=self.quiescent_oxygen_level,
                                              quiescent_glucose_level=self.quiescent_glucose_level,
                                              cell_cycle=self.cell_cycle,
-                                             radiosensitivities=self.radiosensitivities,
                                         oar=None)
         
-        
+    
         def latex_float(f):
             float_str = "{0:.4g}".format(f)
             if "e" in float_str:
@@ -258,15 +257,14 @@ class GridEnv:
         
         
         self.params["Average glucose absorption (healthy)"] = [latex_float(3.6e-8), "mg/cell/hour", str(0.36), str(self.average_healthy_glucose_absorption)]
-        self.params["Average glucose absorption (cancer)"] = [latex_float(5.4e-8), "mg/cell/hour", str(0.36), str(self.average_cancer_glucose_absorption)]
-        self.params["Average oxygen consumption (healthy)"] = [latex_float(2.16e-8), "ml/cell/hour", str(20), str(self.average_healthy_oxygen_consumption)]
-        self.params["Average oxygen consumption (cancer)"] = [latex_float(2.16e-8), "ml/cell/hour", str(20), str(self.average_cancer_oxygen_consumption)]
+        self.params["Average glucose absorption (cancer)"] = [latex_float(5.4e-8), "mg/cell/hour", str(0.54), str(self.average_cancer_glucose_absorption)]
+        self.params["Average oxygen consumption (healthy)"] = [latex_float(2.16e-8), "ml/cell/hour", str(21.6), str(self.average_healthy_oxygen_consumption)]
+        self.params["Average oxygen consumption (cancer)"] = [latex_float(2.16e-8), "ml/cell/hour", str(21.6), str(self.average_cancer_oxygen_consumption)]
         
         self.params["Critical oxygen level"] = [latex_float(3.88e-8), "ml/cell", str(360), str(self.critical_oxygen_level)]
         self.params["Critical glucose level"] = [latex_float(6.48e-8), "mg/cell", str(6.48), str(self.critical_glucose_level)]
-        self.params["Quiescent oxygen level"] = [latex_float(10.37e-8), "ml/cell", str(960), str(self.quiescent_oxygen_level)]
+        self.params["Quiescent oxygen level"] = [latex_float(10.37e-8), "ml/cell", str(1037), str(self.quiescent_oxygen_level)]
         self.params["Quiescent glucose level"] = [latex_float(1.728e-8), "mg/cell", str(17.28), str(self.quiescent_glucose_level)]
-
         
         self.df = pd.DataFrame.from_dict(data=self.params, orient="index", columns=["Theoretical Values", "Units", "Initial Model Values", "Modified Model Values"])
         
@@ -280,27 +278,6 @@ def patch_type_color(patch):
     else:
         return patch[0].cell_color()
     
-"""
-env = GridEnv("dose", 5000, 13000,
-              average_cancer_glucose_absorption=0.36)  
-steps = 100  
-env.reset()
-while steps > 0:
-    print(steps)
-    
-    while not env.inTerminalState() and steps > 0:
-        state = env.convert(env.observe())
-        action = 1
-        reward = env.act(action)
-        next_state = env.convert(env.observe())
-        print(state, action, reward, next_state)
+
+
         
-        #self.update(state, next_state, action, reward)
-        steps -= 1
-    if steps > 0:
-        plt.imshow([[patch_type_color(env.grid.cells[i][j]) for j in range(env.grid.ysize)] for i in range(env.grid.xsize)])
-        plt.show()
-        env.reset()
-        plt.imshow([[patch_type_color(env.grid.cells[i][j]) for j in range(env.grid.ysize)] for i in range(env.grid.xsize)])
-        plt.show()
-"""

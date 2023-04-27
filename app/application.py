@@ -67,16 +67,20 @@ class App(customtkinter.CTk):
             
         with open(dir_path + '\\misc\\nutrients_help.txt', 'r') as file:
             nutrients_file = file.readlines()
+        
+        with open(dir_path + '\\misc\\radiosensitivity_help.txt', 'r') as file:
+            radio_file = file.readlines()
             
         treatment_file = ''.join(line for line in treatment_file)
         cell_cycle_file = ''.join(line for line in cell_cycle_file)
         nutrients_file = ''.join(line for line in nutrients_file)
+        radio_file = ''.join(line for line in radio_file)
                                                             
         
         self.texts = {"Nutrients" : "Help Box\n\n\n " + nutrients_file,
                       "Treatment" : "Help Box\n\n\n " + treatment_file,
                       "Cell cycle" : "Help Box\n\n\n " + cell_cycle_file,
-                      "Radiosensitivity" : "Help Box\n\n\n"}
+                      "Radiosensitivity" : "Help Box\n\n\n " + radio_file}
         self.textbox.insert('0.0', self.texts["Treatment"])
         self.textbox.configure(state="disabled", wrap="word")
 
@@ -98,7 +102,7 @@ class App(customtkinter.CTk):
         button_github = customtkinter.CTkButton(self.sidebar_frame, text= 'GITHUB', 
                                                 image=github, fg_color='transparent', text_color=('black', 'white'),
                                                 command=self.open_github)
-        #button_github.grid(row=6, column=0, padx=20, pady=(10, 0))
+        
         button_github.place(relx=0.025, rely=0.75, relwidth=0.9, relheight=0.05)
         
         # LINKEDIN ICON
@@ -181,6 +185,12 @@ class App(customtkinter.CTk):
 
         # TREATMENT
         
+        self.tabview_combobox = customtkinter.CTkTabview(self.tabview.tab("Treatment"), width=550, command=self.update_tabview_agent)
+        self.tabview_combobox.place(relx= 0.01, rely=0.12, relwidth=0.43, relheight=0.17)
+        
+        self.tabview_combobox.add("Non-Robust")
+        self.tabview_combobox.add("Robust")
+        
         self.tabview_tt = customtkinter.CTkTabview(self.tabview.tab("Treatment"), width=550)
         self.tabview_tt.place(relx=0.45, rely=0.01, relwidth=0.55, relheight=.99)
         
@@ -193,14 +203,21 @@ class App(customtkinter.CTk):
         values = self.list_agent()
         lst = [i for i, _ in values]
         
+        values2 = self.list_agent2()
+        lst2 = [i for i, _ in values2]
+        
         self.combobox_label = customtkinter.CTkLabel(self.tabview.tab("Treatment"), text="RL Agent:", anchor="w", font=customtkinter.CTkFont(size=16, weight="bold"))
         self.combobox_label.place(relx=0.015, rely=0.05, relwidth=0.25, relheight=0.05)
-        self.combobox_1 = customtkinter.CTkComboBox(self.tabview.tab("Treatment"),
+        self.combobox_1 = customtkinter.CTkComboBox(self.tabview_combobox.tab("Non-Robust"),
                                                     values=lst, command=self.update_description)
-        self.combobox_1.place(relx=0.025, rely=0.1, relwidth=0.25, relheight=0.05)
+        self.combobox_1.place(relx=0.025, rely=0.1, relwidth=0.75, relheight=0.75)
+        
+        self.combobox_2 = customtkinter.CTkComboBox(self.tabview_combobox.tab("Robust"),
+                                                    values=lst2, command=self.update_description2)
+        self.combobox_2.place(relx=0.025, rely=0.1, relwidth=0.75, relheight=0.75)
         
         self.states_label = customtkinter.CTkLabel(self.tabview.tab("Treatment"), text="Number of unexplored states by the agent : /", anchor="w", font=customtkinter.CTkFont(size=16, weight="bold"))
-        self.states_label.place(relx=0.015, rely=0.85, relwidth=0.4, relheight=0.05)
+        self.states_label.place(relx=0.015, rely=0.85, relwidth=0.35, relheight=0.1)
         
         
         # Treatment : Performances
@@ -254,7 +271,7 @@ class App(customtkinter.CTk):
         
         # Radiosensitivity
         
-        self.radio = [1, .75, 1.25, 1.25, .75, 0,96875]
+        self.radio = [1, .75, 1.25, 1.25, .75, 0.96875]
         self.fig_radio, self.ax_radio = plt.subplots(1, 1, figsize=(12,9))
         self.fig_radio.patch.set_alpha(0)
         
@@ -290,6 +307,7 @@ class App(customtkinter.CTk):
         self.after(500, self.plot_radio, self.get_values_radio())
         
     def plot_radio(self, radiosensitivities):
+        print(radiosensitivities)
         self.ax_radio.clear()
         alpha_norm_tissue = 0.15
         beta_norm_tissue = 0.03
@@ -319,6 +337,12 @@ class App(customtkinter.CTk):
         self.textbox.insert("0.0", self.texts[tab])
         self.textbox.configure(state="disabled", wrap="word")
         
+    def update_tabview_agent(self):
+        tab = self.tabview_combobox.get()
+        if tab == 'Robust':
+            self.update_description2(1)
+        elif tab == 'Non-Robust':
+            self.update_description(1)
         
     def get_values2(self):
         values = []
@@ -424,11 +448,16 @@ class App(customtkinter.CTk):
         print(agent_name)
         self.description(self.tabview.tab("Treatment"), agent_name)
         
+    def update_description2(self, event):
+        agent_name = self.combobox_2.get()  # get the selected agent name
+        print(agent_name)
+        self.description(self.tabview.tab("Treatment"), agent_name)
+        
 
     def description(self, menu, file_name):
             
         self.agent_frame = customtkinter.CTkFrame(menu, fg_color='transparent')
-        self.agent_frame.place(relx=0.01, rely=0.25, relwidth=0.4, relheight=0.5)
+        self.agent_frame.place(relx=0.01, rely=0.35, relwidth=0.4, relheight=0.45)
         
         tmp_dict = self.get_agent(dir_path + '\\TabularAgentResults\\results_baseline.pickle')
         tcp_baseline = tmp_dict["TCP"]
@@ -437,6 +466,8 @@ class App(customtkinter.CTk):
         duration_baseline = (np.mean(tmp_dict["duration"]), np.std(tmp_dict["duration"]))
         survival_baseline = (np.mean(tmp_dict["survival"]), np.std(tmp_dict["survival"]))
         
+        path = None
+        
         if file_name == 'Baseline':
             tcp = tcp_baseline
             fractions = fractions_baseline
@@ -444,12 +475,20 @@ class App(customtkinter.CTk):
             duration = duration_baseline
             survival = survival_baseline
         else:
-            file_list = self.list_agent()
-            for name, path_ in file_list:
-                if file_name == name:
-                    path = path_
+            file_list = self.list_agent() + self.list_agent2()
+            names = [x[0] for x in file_list]
+            idx = names.index(file_name)
+            
+            name, path = file_list[idx]
+            try:
+                tmp_dict = self.get_agent(path + f'\\results_{int_from_str(path)}.pickle')
+                path_q_table = path + f'\\q_table_{int_from_str(path)}'
+            except:
+                tmp_dict = self.get_agent(path + f'\\results_{name}.pickle')
+                path_q_table = path + f'\\q_table_{name}'
                 
-            tmp_dict = self.get_agent(path + f'\\results_{int_from_str(path)}.pickle')
+                
+            
             tcp = tmp_dict["TCP"]
             fractions = (np.mean(tmp_dict["fractions"]), np.std(tmp_dict["fractions"]))
             doses = (np.mean(tmp_dict["doses"]), np.std(tmp_dict["doses"]))
@@ -484,7 +523,7 @@ class App(customtkinter.CTk):
                 
         self.boxplot_agent(tmp_dict["fractions"], tmp_dict["duration"], tmp_dict["survival"], file_name)
         if file_name != 'Baseline':
-            self.q_table_agent(path)
+            self.q_table_agent(path_q_table)
 
                 
     def get_agent(self, path):
@@ -504,6 +543,20 @@ class App(customtkinter.CTk):
                 
         return lst
     
+    def list_agent2(self):
+        
+        filename = dir_path + "\\TabularAgentRobustCellCycle\\"
+        list_dir = [(f.name, f.path) for f in os.scandir(filename) if f.is_dir()]
+                
+        return list_dir
+    
+    def list_agent3(self):
+        
+        filename = dir_path + "\\TabularAgentRobustRadio\\"
+        list_dir = [(f.name, f.path) for f in os.scandir(filename) if f.is_dir()]
+                
+        return list_dir
+    
     def q_table_agent(self, path):
         
         def get_q_color(value, vals):
@@ -514,8 +567,7 @@ class App(customtkinter.CTk):
             else:
                 return "red", 0.3
 
-        filename = path + f'\\q_table_{int_from_str(path)}'
-        q_table = np.load(filename + '.npy', allow_pickle=False)
+        q_table = np.load(path + '.npy', allow_pickle=False)
         
         self.axes_table[0].clear()
         self.axes_table[1].clear()

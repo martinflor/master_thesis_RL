@@ -70,7 +70,7 @@ class SimulationPage(customtkinter.CTkFrame):
         self.focus = False
         
         # SAVE PLOT BUTTON
-        self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, text="Save Plot", width=190, command=self.save_plot)
+        self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, text="Save Plot", width=190, command=self.save_plot_hd)
         self.sidebar_button_2.grid(row=2, column=0, padx=10, pady=10)
         self.save = False
         
@@ -118,13 +118,11 @@ class SimulationPage(customtkinter.CTkFrame):
     
         self.environment.reset()
         self.environment.go(steps=1)
+        self.structures.append(self.environment)
         self.idx = 0
         self.speed = 250
         self.start_hour = None
-        
-        self.structures.append(self.environment)
-    
-    
+
         x_pos = 0.2
         self.fig, axs = plt.subplots(2, 3, figsize = (16,16))
         canvas = FigureCanvasTkAgg(self.fig, master=self.master)
@@ -244,29 +242,6 @@ class SimulationPage(customtkinter.CTkFrame):
             
             actions = np.argwhere(self.q_table[state]==np.max(self.q_table[state])).flatten()
             return np.random.choice(actions)
-    
-    def update(self):
-        if not self.stop_event.is_set():
-            if not self.is_paused:
-                if not self.environment.inTerminalState():
-                    self.environment.go(steps=1)
-                    self.slider.set(self.idx)
-                    if (self.start_hour is None):
-                        if (CancerCell.cell_count > 9000):
-                            self.start_hour = self.environment.time
-                        else:
-                            self.update_plot(self.idx)
-                            self.master.after(self.speed, self.update)
-                    elif ((self.idx-(self.start_hour-24))%24 == 0):
-                        state = self.environment.convert(self.environment.observe())
-                        action = self.choose_action(state)
-                        reward = self.environment.act(action)
-                    self.update_plot(self.idx)
-                else:
-                    self.idx -= 1
-                    self.save_plot()
-
-            self.master.after(self.speed, self.update)
             
     def update(self):
         if not self.stop_event.is_set():
@@ -279,15 +254,26 @@ class SimulationPage(customtkinter.CTkFrame):
                             state = self.environment.convert(self.environment.observe())
                             action = self.choose_action(state)
                             reward = self.environment.act(action)
-                    elif (self.start_hour is None) and (CancerCell.cell_count > 9000):
-                        self.start_hour = self.environment.time
+                    elif (self.start_hour is None):
+                        if (CancerCell.cell_count > 9000):
+                            self.start_hour = self.environment.time
+                            print(f'Start of radiotherapy at time {self.start_hour}')
+                            print(f'Number of Cancer Cells : {CancerCell.cell_count}')
+                            print(f'Number of Healthy Cells : {HealthyCell.cell_count}')
+                        elif (self.environment.time > 326):
+                            self.start_hour = 350
+                            print(f'Start of radiotherapy at time 350')
+                            print(f'Number of Cancer Cells : {CancerCell.cell_count}')
+                            print(f'Number of Healthy Cells : {HealthyCell.cell_count}')
                     
                     self.update_plot(self.idx)
                     
                 else:
                     self.idx -= 1
                     self.save_plot()
+                    self.save_plot_hd()
                     self.stop_simulation()
+                    print("End of simulation")
                     return
 
             self.master.after(self.speed, self.update)
@@ -329,15 +315,6 @@ class SimulationPage(customtkinter.CTkFrame):
         self.speed = lst[int(value)-1]
         
     def plot_data(self, i):
-        
-        def axes_off(ax):
-          ax.spines['top'].set_visible(False)
-          ax.spines['right'].set_visible(False)
-          ax.spines['bottom'].set_visible(False)
-          ax.spines['left'].set_visible(False)
-          ax.tick_params(axis='both', which='both', length=0)
-          
-          return ax
     
         self.fig.suptitle('Cell proliferation at t = ' + str(i))    
     
@@ -368,7 +345,6 @@ class SimulationPage(customtkinter.CTkFrame):
         # plot dose
         self.dose_plot.clear()
         self.dose_plot = axes_off(self.dose_plot)
-        #self.dose_plot.set_title("Radiation Dose")
         plt.text(0.5, 1.08, "Radiation Dose",
              horizontalalignment='center',
              fontsize=20,
@@ -403,9 +379,83 @@ class SimulationPage(customtkinter.CTkFrame):
     
         self.idx += 1
         self.fig.canvas.draw()
+        
+    def save_plot_hd(self):
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+        i = self.idx - 1
+        
+        fig, ax = plt.subplots(1, 1, figsize = (16,16))
+        ax.imshow(self.grid_arr[i], cmap='coolwarm')
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"Cells at time {i}", fontsize=80, pad=10)
+        plt.savefig(f"save/{i}cells.svg")
+        
+        fig, ax = plt.subplots(1, 1, figsize = (16,16))
+        ax = axes_off(ax)
+        plt.text(0.5, 1.08, f"Cancer Cells at time {i}",
+             horizontalalignment='center',
+             fontsize=80,
+             transform = ax.transAxes)
+        ax.plot(self.time_arr[:i+1], self.cancer_arr[:i+1], label="Cancer", color="r")
+        plt.savefig(f"save/{i}_cancer_cells.svg")
+        
+        fig, ax = plt.subplots(1, 1, figsize = (16,16))
+        ax = axes_off(ax)
+        plt.text(0.5, 1.08, f"Healthy Cells at time {i}",
+             horizontalalignment='center',
+             fontsize=80,
+             transform = ax.transAxes)
+        ax.plot(self.time_arr[:i+1], self.healthy_arr[:i+1], label="Healthy", color="b")
+        plt.savefig(f"save/{i}_healthy_cells.svg")
+        
+        
+        # CELL DENSITY
+        fig, ax = plt.subplots(1, 1, figsize = (16,16))
+        div = make_axes_locatable(ax)
+        cax = div.append_axes('right', '5%', '5%')
+        data = np.zeros((self.environment.xsize, self.environment.ysize))
+        im = ax.imshow(data)
+        cb = fig.colorbar(im, cax=cax)
+        
+        
+        im = ax.imshow(self.density_arr[i], cmap='coolwarm')
+        fig.colorbar(im, cax=cax)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"Cell Density at time {i}", fontsize=80, pad=10)
+        plt.savefig(f"save/{i}_density.svg")
+        
+        # GLUCOSE HEATMAP
+        fig, ax = plt.subplots(1, 1, figsize = (16,16))
+        div2 = make_axes_locatable(ax)
+        cax2 = div2.append_axes('right', '5%', '5%')
+        data2 = np.zeros((self.environment.xsize, self.environment.ysize))
+        im2 = ax.imshow(data2)
+        cb2 = fig.colorbar(im2, cax=cax2)
+        
+        
+        cax2.cla()
+        im2 = ax.imshow(self.glucose_arr[i], cmap='YlOrRd')
+        fig.colorbar(im2, cax=cax2)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"Glucose Concentration at time {i}", fontsize=80, pad=10)
+        plt.savefig(f"save/{i}glucose_concentration.svg")
+        
+        
     
 def int_from_str(r):
     return ''.join(x for x in r if x.isdigit())
+
+def axes_off(ax):
+  ax.spines['top'].set_visible(False)
+  ax.spines['right'].set_visible(False)
+  ax.spines['bottom'].set_visible(False)
+  ax.spines['left'].set_visible(False)
+  ax.tick_params(axis='both', which='both', length=0)
+  
+  return ax
 
 
 if __name__ == '__main__':

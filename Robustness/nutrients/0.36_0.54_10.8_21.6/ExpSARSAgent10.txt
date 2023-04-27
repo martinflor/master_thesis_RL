@@ -1,0 +1,49 @@
+Old environment parameters 
+                                        Theoretical Values         Units Initial Model Values Modified Model Values
+Starting healthy cells                                1000             -                 1000                  1000
+Starting cancer cells                                    1             -                    1                     1
+Starting nutrient sources                              100             -                  100                   100
+Starting glucose level                    1 \times 10^{-6}          [mg]                  100                 100.0
+Starting oxygen level                     1 \times 10^{-6}          [ml]                 1000                1000.0
+Average glucose absorption (healthy)    3.6 \times 10^{-8}  mg/cell/hour                 0.36                  0.36
+Average glucose absorption (cancer)     5.4 \times 10^{-8}  mg/cell/hour                 0.54                  0.54
+Average oxygen consumption (healthy)   2.16 \times 10^{-8}  ml/cell/hour                 21.6                  21.6
+Average oxygen consumption (cancer)    2.16 \times 10^{-8}  ml/cell/hour                 21.6                  21.6
+Critical oxygen level                  3.88 \times 10^{-8}       ml/cell                  360    388.80000000000007
+Critical glucose level                 6.48 \times 10^{-8}       mg/cell                 6.48                  6.48
+Quiescent oxygen level                1.037 \times 10^{-7}       ml/cell                 1037    1036.8000000000002
+Quiescent glucose level               1.728 \times 10^{-8}       mg/cell                17.28                 17.28
+
+Performances of the agent on the old environment
+TCP :100.0
+Average num of fractions: 12.56 std dev: 2.417933001553186
+Average duration: 301.44 std dev: 58.03039203727647
+Average survival: 0.948542565740248 std dev: 0.03471383819291616
+Average radiation dose: 39.22 std dev: 6.762514325308302
+
+
+
+
+Test of the robustness of the agent 
+New environment parameters 
+                                        Theoretical Values         Units Initial Model Values Modified Model Values
+Starting healthy cells                                1000             -                 1000                  1000
+Starting cancer cells                                    1             -                    1                     1
+Starting nutrient sources                              100             -                  100                   100
+Starting glucose level                    1 \times 10^{-6}          [mg]                  100                 100.0
+Starting oxygen level                     1 \times 10^{-6}          [ml]                 1000                1000.0
+Average glucose absorption (healthy)    3.6 \times 10^{-8}  mg/cell/hour                 0.36                  0.36
+Average glucose absorption (cancer)     5.4 \times 10^{-8}  mg/cell/hour                 0.54                  0.54
+Average oxygen consumption (healthy)   2.16 \times 10^{-8}  ml/cell/hour                 21.6                  10.8
+Average oxygen consumption (cancer)    2.16 \times 10^{-8}  ml/cell/hour                 21.6                  21.6
+Critical oxygen level                  3.88 \times 10^{-8}       ml/cell                  360    194.40000000000003
+Critical glucose level                 6.48 \times 10^{-8}       mg/cell                 6.48                  6.48
+Quiescent oxygen level                1.037 \times 10^{-7}       ml/cell                 1037     518.4000000000001
+Quiescent glucose level               1.728 \times 10^{-8}       mg/cell                17.28                 17.28
+
+Performances of the agent on the new environment
+TCP :100.0
+Average num of fractions: 12.02 std dev: 2.4123847122712414
+Average duration: 288.48 std dev: 57.897233094509794
+Average survival: 0.928688063613495 std dev: 0.03734248512712827
+Average radiation dose: 38.14 std dev: 6.039900661434756

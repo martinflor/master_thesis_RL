@@ -133,9 +133,6 @@ class Grid:
         # Helpers are useful because diffusion cannot be done efficiently in place.
         # With a helper array of same shape, we can simply compute the result inside the other and alternate between
         # the arrays.
-        
-        print(self.cell_cycle)
-        print(self.radiosensitivities)
 
         self.cells = np.empty((xsize, ysize), dtype=object)
         for i in range(xsize):
