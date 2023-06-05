@@ -20,7 +20,7 @@ python application.py
 <details>
    <summary>Title 1</summary>
    <p><p align="center">
-<img src="app/images/epl.jpg" width="100" height="100" border="10"/>
+<img src="app/images/EPL.jpg" width="100" height="100" border="10"/>
 </p></p>
 </details>
 
