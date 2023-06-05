@@ -19,7 +19,9 @@ python application.py
 
 <details>
    <summary>Title 1</summary>
-   <p>Content 1 Content 1 Content 1 Content 1 Content 1</p>
+   <p><p align="center">
+<img src="app/images/epl.jpg" width="100" height="100" border="10"/>
+</p></p>
 </details>
 
 ## License
